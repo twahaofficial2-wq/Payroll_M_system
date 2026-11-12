@@ -1,0 +1,123 @@
+{% extends "./base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="page-shell">
+    <div class="page-header">
+        <div>
+            <h1>Payslips</h1>
+            <p>Record gross pay, deductions, and net pay for each employee.</p>
+        </div>
+    </div>
+
+    <div class="card form-card p-4 mb-4">
+        <form method="POST">
+            {% csrf_token %}
+            {{form|crispy}}
+            <button type="submit" class="btn btn-success w-100">Save Payslip</button>
+        </form>
+    </div>
+
+    <div class="card">
+        {% if msg %}
+        <div class="alert alert-info mb-3">{{ msg }}</div>
+        {% endif %}
+
+        <div class="list-card-header">
+            <h2>Payslip register</h2>
+            <span>{{ payslip_page.paginator.count }} records</span>
+        </div>
+        <form method="get" class="list-filter-form">
+            <div class="list-filter-search">
+                <label for="payslip-search">Search payslips</label>
+                <input
+                    class="form-control"
+                    id="payslip-search"
+                    type="search"
+                    name="q"
+                    value="{{ search_query }}"
+                    placeholder="Employee name, email, or pay period"
+                >
+            </div>
+            <div class="list-filter-select">
+                <label for="payslip-payroll">Payroll period</label>
+                <select class="form-select" id="payslip-payroll" name="payroll">
+                    <option value="">All periods</option>
+                    {% for payroll in payroll_periods %}
+                    <option value="{{ payroll.pk }}" {% if selected_payroll == payroll.pk|stringformat:"s" %}selected{% endif %}>
+                        {{ payroll.month }}/{{ payroll.year }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="list-filter-select">
+                <label for="payslip-status">Status</label>
+                <select class="form-select" id="payslip-status" name="status">
+                    <option value="">All statuses</option>
+                    {% for status in payroll_statuses %}
+                    <option value="{{ status }}" {% if selected_status == status %}selected{% endif %}>{{ status|title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Filter</button>
+            {% if search_query or selected_payroll or selected_status %}
+            <a class="btn btn-outline-secondary" href="{% url 'add_payslip_page' %}">Clear</a>
+            {% endif %}
+        </form>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered align-middle" style="margin-bottom:0;">
+                <thead>
+                    <tr>
+                        <th scope="col">No.</th>
+                        <th scope="col">Employee</th>
+                        <th scope="col">Payroll</th>
+                        <th scope="col">Pay Period</th>
+                        <th scope="col">Gross Pay</th>
+                        <th scope="col">Deductions</th>
+                        <th scope="col">Net Pay</th>
+                        <th scope="col">Download</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payslip in payslips %}
+                    <tr>
+                        <th scope="row">{{payslip.id}}</th>
+                        <td>{{payslip.employee.First_name}} {{ payslip.employee.last_name }}</td>
+                        <td>{{payslip.payroll.id}}</td>
+                        <td>{{payslip.pay_period}}</td>
+                        <td>{{payslip.gross_pay}}</td>
+                        <td>{{payslip.deductions}}</td>
+                        <td>{{payslip.net_pay}}</td>
+                        <td><a class="btn btn-sm btn-outline-secondary" data-payslip-download href="{% url 'download_payslip_page' payslip.id %}">PDF</a></td>
+                        <td>
+                            <a href="{% url 'edit_payslip_page' payslip.id%}" class='btn btn-sm btn-primary'>Edit</a>
+                            <form method="post" action="{% url 'delete_payslip_page' payslip.id %}" class="d-inline" onsubmit="return confirm('WARNING! Payslip {{ payslip.id }} WILL BE DELETED!')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="9" class="text-center text-muted py-4">
+                        {% if search_query or selected_payroll or selected_status %}No payslips match these filters.{% else %}No payslips yet. Add a payslip using the form above.{% endif %}
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if payslip_page.has_other_pages %}
+        <nav class="list-pagination" aria-label="Payslip pages">
+            <span>Page {{ payslip_page.number }} of {{ payslip_page.paginator.num_pages }}</span>
+            <div>
+                {% if payslip_page.has_previous %}
+                <a class="btn btn-sm btn-outline-secondary" href="?q={{ search_query|urlencode }}&payroll={{ selected_payroll|urlencode }}&status={{ selected_status|urlencode }}&page={{ payslip_page.previous_page_number }}">Previous</a>
+                {% endif %}
+                {% if payslip_page.has_next %}
+                <a class="btn btn-sm btn-outline-secondary" href="?q={{ search_query|urlencode }}&payroll={{ selected_payroll|urlencode }}&status={{ selected_status|urlencode }}&page={{ payslip_page.next_page_number }}">Next</a>
+                {% endif %}
+            </div>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock content %}

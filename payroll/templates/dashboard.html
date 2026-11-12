@@ -1,0 +1,166 @@
+{% extends "./base.html" %}
+{% load static %}
+
+{% block title %}Overview | NHL Payroll{% endblock %}
+
+{% block content %}
+<div class="page-inner">
+    <div class="page-header d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h1 class="page-title">Payroll overview</h1>
+            <p class="text-muted mb-0">A current snapshot of your workforce and payroll records.</p>
+        </div>
+        <a class="btn btn-primary" href="{% url 'add_payroll_page' %}">
+            <i class="fas fa-plus me-1"></i> Create payroll run
+        </a>
+    </div>
+
+    {% if latest_payroll %}
+    <section class="card current-payroll-card mb-4" aria-labelledby="current-payroll-heading">
+        <div class="current-payroll-layout">
+            <div class="current-payroll-summary">
+                <div class="current-payroll-heading">
+                    <div>
+                        <p class="card-category mb-1">Latest payroll period</p>
+                        <h2 id="current-payroll-heading" class="current-payroll-period">
+                            {{ latest_payroll.month }}/{{ latest_payroll.year }}
+                        </h2>
+                    </div>
+                    <span class="badge {% if latest_payroll.status|lower == 'paid' %}badge-success{% elif latest_payroll.status|lower == 'pending' %}badge-warning{% else %}badge-secondary{% endif %}">
+                        {{ latest_payroll.status|title }}
+                    </span>
+                </div>
+                <div class="current-payroll-totals">
+                    <div>
+                        <span>Gross pay</span>
+                        <strong>{{ current_payroll_totals.gross_pay|floatformat:2 }}</strong>
+                    </div>
+                    <div>
+                        <span>Deductions</span>
+                        <strong>{{ current_payroll_totals.deductions|floatformat:2 }}</strong>
+                    </div>
+                    <div>
+                        <span>Net pay</span>
+                        <strong>{{ current_payroll_totals.net_pay|floatformat:2 }}</strong>
+                    </div>
+                </div>
+                <p class="current-payroll-note mb-0">
+                    Totals from {{ latest_payroll.payslip_set.count }} payslip{{ latest_payroll.payslip_set.count|pluralize }} in this period.
+                </p>
+            </div>
+            <img class="current-payroll-image"
+                 src="{% static 'Kaiadmin/assets/img/payroll (9).jpg' %}"
+                 alt="Calculator and financial charts representing payroll reporting"
+                 loading="lazy">
+        </div>
+    </section>
+    {% else %}
+    <section class="card current-payroll-card current-payroll-empty mb-4">
+        <div class="current-payroll-empty-layout">
+            <div>
+                <h2 class="h5 mb-2">No payroll periods yet</h2>
+                <p class="mb-3">Create a payroll run to see its current status and totals here.</p>
+                <a class="btn btn-primary align-self-start" href="{% url 'add_payroll_page' %}">Create payroll run</a>
+            </div>
+            <img src="{% static 'Kaiadmin/assets/img/undraw/undraw_no_data_qbuo.svg' %}"
+                 alt="Illustration of an empty records page"
+                 loading="lazy">
+        </div>
+    </section>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <p class="card-category">Employees</p>
+                    <h3 class="card-title">{{ employee_count }}</h3>
+                    <a href="{% url 'add_employee_page' %}" class="small">View employees</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <p class="card-category">Departments</p>
+                    <h3 class="card-title">{{ department_count }}</h3>
+                    <a href="{% url 'add_department_page' %}" class="small">View departments</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <p class="card-category">Payroll runs</p>
+                    <h3 class="card-title">{{ payroll_count }}</h3>
+                    <a href="{% url 'add_payroll_page' %}" class="small">Manage payroll</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-md-3">
+            <div class="card card-stats card-round">
+                <div class="card-body">
+                    <p class="card-category">Payslips</p>
+                    <h3 class="card-title">{{ payslip_count }}</h3>
+                    <a href="{% url 'add_payslip_page' %}" class="small">Manage payslips</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-2">
+        <div class="col-lg-8">
+            <div class="card card-round">
+                <div class="card-header">
+                    <div class="card-head-row">
+                        <h4 class="card-title">Recent payroll runs</h4>
+                        <a href="{% url 'add_payroll_page' %}" class="btn btn-sm btn-outline-secondary">All payroll runs</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Pay period</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payroll in recent_payrolls %}
+                                <tr>
+                                    <td>{{ payroll.month }}/{{ payroll.year }}</td>
+                                    <td>
+                                        <span class="badge {% if payroll.status|lower == 'paid' %}badge-success{% elif payroll.status|lower == 'pending' %}badge-warning{% else %}badge-secondary{% endif %}">
+                                            {{ payroll.status|title }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="text-muted">No payroll runs have been created yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card card-round">
+                <div class="card-header">
+                    <h4 class="card-title">Quick access</h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-outline-secondary text-start" href="{% url 'add_employee_page' %}"><i class="fas fa-user-plus me-2"></i>Add an employee</a>
+                        <a class="btn btn-outline-secondary text-start" href="{% url 'add_salary_scale_page' %}"><i class="fas fa-coins me-2"></i>Review salary scales</a>
+                        <a class="btn btn-outline-secondary text-start" href="{% url 'add_payslip_page' %}"><i class="fas fa-file-invoice me-2"></i>Manage payslips</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
