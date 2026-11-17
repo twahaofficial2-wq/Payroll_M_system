@@ -1,0 +1,30 @@
+databases:
+  - name: payroll-db
+    plan: free
+    databaseName: payroll
+    user: payroll
+
+services:
+  - type: web
+    name: employee-payroll
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input
+    startCommand: python manage.py migrate && python manage.py bootstrap_superuser && gunicorn --bind 0.0.0.0:$PORT general_settings.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.4
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: payroll-db
+          property: connectionString
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: admin
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: admin@example.com
+      - key: DJANGO_SUPERUSER_PASSWORD
+        sync: false

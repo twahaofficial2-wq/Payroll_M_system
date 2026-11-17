@@ -1,0 +1,143 @@
+{% extends "./base.html" %}
+
+{% block title %}Employee overview | NHL Payroll{% endblock %}
+
+{% block content %}
+<div class="page-shell">
+    <div class="page-header">
+        <div>
+            <h1>Welcome{% if employee %}, {{ employee.First_name }}{% else %}, {{ request.user.get_username }}{% endif %}</h1>
+            <p>Your personal workspace for payslips, leave, and account details.</p>
+        </div>
+        {% if employee %}
+        <a class="btn btn-primary" href="{% url 'leave_request_page' %}">
+            <i class="fas fa-plus me-1" aria-hidden="true"></i> Request leave
+        </a>
+        {% endif %}
+    </div>
+
+    {% if managed_department %}
+    <section class="card p-4 mb-4" aria-labelledby="manager-tools-heading">
+        <h2 id="manager-tools-heading" class="h4">Department manager tools</h2>
+        <p class="text-muted">Managing {{ managed_department.department_name }}. Review requests here; payroll amounts remain restricted to payroll staff.</p>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-primary" href="{% url 'manager_employees_page' %}">Department employees</a>
+            <a class="btn btn-outline-primary" href="{% url 'manager_leave_requests_page' %}">Leave approvals ({{ pending_manager_leave_count }})</a>
+            <a class="btn btn-outline-primary" href="{% url 'manager_payroll_requests_page' %}">Payroll requests ({{ pending_manager_payroll_count }})</a>
+            <a class="btn btn-outline-primary" href="{% url 'manager_employee_data_requests_page' %}">Employee approvals ({{ pending_manager_data_count }})</a>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if employee %}
+    <section class="employee-welcome-panel mb-4" aria-labelledby="employee-welcome-heading">
+        <div>
+            <span class="employee-eyebrow">EMPLOYEE PORTAL</span>
+            <h2 id="employee-welcome-heading">{{ employee.position.title }}</h2>
+            <p>{{ employee.department_name.department_name }}{% if employee.hire_date %} <span aria-hidden="true">·</span> Joined {{ employee.hire_date|date:"F Y" }}{% endif %}</p>
+        </div>
+        <a class="employee-welcome-link" href="{% url 'employee_profile_page' %}">
+            View your profile <i class="fas fa-arrow-right ms-1" aria-hidden="true"></i>
+        </a>
+    </section>
+
+    <section class="employee-stat-grid mb-4" aria-label="Your account summary">
+        <article class="employee-stat-card">
+            <span class="employee-stat-icon"><i class="fas fa-receipt" aria-hidden="true"></i></span>
+            <div><span class="employee-stat-label">Payslips available</span><strong>{{ payslip_count }}</strong></div>
+            <a href="{% url 'employee_payslips_page' %}">View payslips</a>
+        </article>
+        <article class="employee-stat-card">
+            <span class="employee-stat-icon"><i class="fas fa-wallet" aria-hidden="true"></i></span>
+            <div><span class="employee-stat-label">Latest net pay</span><strong>{% if latest_payslip %}{{ latest_payslip.net_pay|floatformat:2 }}{% else %}—{% endif %}</strong></div>
+            {% if latest_payslip %}<span class="employee-stat-note">{{ latest_payslip.pay_period }}</span>{% else %}<span class="employee-stat-note">No payslip yet</span>{% endif %}
+        </article>
+        <article class="employee-stat-card">
+            <span class="employee-stat-icon"><i class="fas fa-calendar-check" aria-hidden="true"></i></span>
+            <div><span class="employee-stat-label">Leave requests</span><strong>{{ leave_request_count }}</strong></div>
+            <a href="{% url 'leave_request_page' %}">View requests</a>
+        </article>
+        <article class="employee-stat-card">
+            <span class="employee-stat-icon employee-stat-icon-warm"><i class="fas fa-hourglass-half" aria-hidden="true"></i></span>
+            <div><span class="employee-stat-label">Awaiting review</span><strong>{{ pending_leave_count }}</strong></div>
+            <span class="employee-stat-note">Pending requests</span>
+        </article>
+    </section>
+
+    <div class="employee-dashboard-grid">
+        <section class="card employee-dashboard-card" aria-labelledby="recent-payslip-heading">
+            <div class="list-card-header">
+                <div><h2 id="recent-payslip-heading">Latest payslip</h2><span>Your most recent payroll record</span></div>
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'employee_payslips_page' %}">All payslips</a>
+            </div>
+            {% if latest_payslip %}
+            <div class="employee-latest-payslip">
+                <div>
+                    <span class="employee-stat-label">Pay period</span>
+                    <strong>{{ latest_payslip.pay_period }}</strong>
+                </div>
+                <div>
+                    <span class="employee-stat-label">Gross pay</span>
+                    <strong>{{ latest_payslip.gross_pay|floatformat:2 }}</strong>
+                </div>
+                <div>
+                    <span class="employee-stat-label">Deductions</span>
+                    <strong>{{ latest_payslip.deductions|floatformat:2 }}</strong>
+                </div>
+                <div>
+                    <span class="employee-stat-label">Net pay</span>
+                    <strong class="employee-net-pay">{{ latest_payslip.net_pay|floatformat:2 }}</strong>
+                </div>
+                <a class="btn btn-primary" data-payslip-download href="{% url 'download_payslip_page' latest_payslip.id %}">
+                    <i class="fas fa-download me-1" aria-hidden="true"></i> Download PDF
+                </a>
+            </div>
+            {% else %}
+            <div class="employee-empty-state">
+                <span class="employee-empty-icon"><i class="fas fa-file-invoice-dollar" aria-hidden="true"></i></span>
+                <h3>No payslips yet</h3>
+                <p>Your payslips will appear here after payroll publishes them.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <section class="card employee-dashboard-card" aria-labelledby="recent-leave-heading">
+            <div class="list-card-header">
+                <div><h2 id="recent-leave-heading">Recent leave</h2><span>Track your time-off requests</span></div>
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'leave_request_page' %}">View all</a>
+            </div>
+            {% if recent_leave_requests %}
+            <div class="employee-activity-list">
+                {% for leave_request in recent_leave_requests %}
+                <article class="employee-activity-item">
+                    <span class="employee-activity-icon"><i class="fas fa-calendar-day" aria-hidden="true"></i></span>
+                    <div class="employee-activity-copy">
+                        <strong>{{ leave_request.get_leave_type_display }}</strong>
+                        <span>{{ leave_request.start_date|date:"M j" }} - {{ leave_request.end_date|date:"M j, Y" }}</span>
+                    </div>
+                    <span class="employee-status employee-status-{{ leave_request.status }}">{{ leave_request.get_status_display }}</span>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="employee-empty-state employee-empty-state-compact">
+                <span class="employee-empty-icon"><i class="fas fa-calendar-plus" aria-hidden="true"></i></span>
+                <h3>No leave requests</h3>
+                <p>Need time off? Submit a request for your manager to review.</p>
+                <a href="{% url 'leave_request_page' %}">Request leave</a>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+    {% else %}
+    <section class="card employee-unlinked-card">
+        <span class="employee-empty-icon"><i class="fas fa-link" aria-hidden="true"></i></span>
+        <div>
+            <h2>Your employee account needs to be linked</h2>
+            <p>Payroll staff must connect this login to your employee record before your profile, payslips, and leave requests are available.</p>
+            <p class="mb-0">Please contact your payroll administrator and ask them to select your account under <strong>Employees → Edit → Employee login account</strong>.</p>
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock content %}

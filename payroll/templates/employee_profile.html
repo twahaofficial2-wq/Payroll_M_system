@@ -1,0 +1,44 @@
+{% extends "./base.html" %}
+{% load crispy_forms_tags %}
+
+{% block title %}My profile | NHL Payroll{% endblock %}
+
+{% block content %}
+<div class="page-shell">
+    <div class="page-header">
+        <div>
+            <h1>My profile</h1>
+            <p>View your employee information and update your contact details.</p>
+        </div>
+    </div>
+
+    <section class="card p-4 mb-4" aria-labelledby="profile-details-heading">
+        <h2 id="profile-details-heading" class="h4 mb-3">Employment details</h2>
+        <dl class="row mb-0">
+            <dt class="col-sm-4">Name</dt>
+            <dd class="col-sm-8">{{ employee.First_name }} {{ employee.last_name }}</dd>
+            <dt class="col-sm-4">Department</dt>
+            <dd class="col-sm-8">{{ employee.department_name.department_name }}</dd>
+            <dt class="col-sm-4">Position</dt>
+            <dd class="col-sm-8">{{ employee.position.title }}</dd>
+            <dt class="col-sm-4">Hire date</dt>
+            <dd class="col-sm-8">{{ employee.hire_date }}</dd>
+        </dl>
+    </section>
+
+    <section class="card form-card p-4">
+        <h2 class="h4 mb-3">Contact details</h2>
+        {% if pending_data_request %}
+        <div class="alert alert-info" role="status">
+            Your profile changes are awaiting department manager approval. You can submit another change after this request is reviewed.
+        </div>
+        {% else %}
+        <form method="post">
+            {% csrf_token %}
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-primary">Save contact details</button>
+        </form>
+        {% endif %}
+    </section>
+</div>
+{% endblock content %}

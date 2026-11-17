@@ -1,0 +1,25 @@
+{% extends "./base.html" %}
+{% load static %}
+{% block content %}
+    <div class="hero">
+        <div class="hero-text">
+            <h1>EMPLOYEE P.M.S</h1>
+            <h3>Payroll Made Simple & Secure</h3>
+            <p>Manage Employees, salaries and Payslips all in one Secure system.Fast,Accurate and paperless.</p>
+            <div class="hero-actions">
+                <a class="btn btn-success" href="{% url 'sign_up_page' %}">Get started</a>
+                <a class="btn btn-outline-secondary" href="{% url 'login' %}">Log in</a>
+            </div>
+            <div class="stats">
+                <div><b>{{ employee_count }}</b><br>Employees</div>
+                <div><b>{{ payroll_count }}</b><br>Payroll runs</div>
+                <div><b>{{ payslip_count }}</b><br>Payslips</div>
+            </div>
+        </div>
+        <div class="hero-image">
+            <img src="{% static 'Kaiadmin/assets/img/best_payroll.jpg' %}"
+                 alt="Payroll management workspace with a payroll key on a keyboard"
+                 fetchpriority="high">
+        </div>
+    </div>
+{% endblock content %}

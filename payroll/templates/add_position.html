@@ -1,0 +1,63 @@
+{% extends "./base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="page-shell">
+    <div class="page-header">
+        <div>
+            <h1>Positions</h1>
+            <p>Define roles and levels for your organization.</p>
+        </div>
+    </div>
+
+    <div class="card form-card p-4 mb-4">
+        <form method="POST">
+            {% csrf_token %}
+            {{form|crispy}}
+            <button type="submit" class="btn btn-success w-100">Save Position</button>
+        </form>
+    </div>
+
+    <div class="card">
+        {% if msg %}
+        <div class="alert alert-info mb-3">{{ msg }}</div>
+        {% endif %}
+
+        <div class="list-card-header">
+            <h2>Position directory</h2>
+            <span>{{ positions|length }} records</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered align-middle" style="margin-bottom:0;">
+                <thead>
+                    <tr>
+                        <th scope="col">No.</th>
+                        <th scope="col">Title</th>
+                        <th scope="col">Level</th>
+                        <th scope="col">Department</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for position in positions %}
+                    <tr>
+                        <th scope="row">{{position.id}}</th>
+                        <td>{{position.title}}</td>
+                        <td>{{position.level}}</td>
+                        <td>{{position.department_name}}</td>
+                        <td>
+                            <a href="{% url 'edit_position_page' position.id%}" class='btn btn-sm btn-primary'>Edit</a>
+                            <form method="post" action="{% url 'delete_position_page' position.id %}" class="d-inline" onsubmit="return confirm('WARNING! {{ position.title }} WILL BE DELETED!')">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">No positions yet. Add a position using the form above.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock content %}

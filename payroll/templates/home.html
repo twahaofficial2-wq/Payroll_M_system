@@ -1,0 +1,25 @@
+{% extends "./base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+<div class="overlay">
+
+  <div class="content">
+    <div class="welcome-box">
+      <h1>Welcome to NHL Payroll Management System</h1>
+      <h3>System Basics:</h3>
+      <p>
+        The NHL Payroll Management System is designed to automate the payroll process for organizations. 
+        In many companies, payroll is done manually which leads to errors, delays, and loss of data.
+      </p>
+      <p>
+        This system will manage <b>Employees, Departments,salary,Position,payslips and Payrolls</b>. It allows HR to add new employees, 
+        assign them to departments,Their Position, set their basic salary, calculate allowances and deductions, and generate 
+        monthly payslips. Employees can log in to view their dashboard, check their salary history and download payslips.
+      </p>
+    </div>
+  </div>
+
+</div>
+<a href="{% url "index_page" %}" >Back Home</a>
+<script src="script.js"></script>
+{% endblock content %}

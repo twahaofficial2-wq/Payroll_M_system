@@ -1,0 +1,91 @@
+{% extends "./base.html" %}
+
+{% block title %}Employee approvals | NHL Payroll{% endblock %}
+
+{% block content %}
+<div class="page-shell">
+    <div class="page-header">
+        <div>
+            <h1>{% if staff_view %}Employee data requests{% else %}Employee data approvals{% endif %}</h1>
+            <p>{% if staff_view %}Review pending employee records and profile changes across departments.{% else %}Review proposed employee records and profile changes for {{ department.department_name }}.{% endif %}</p>
+        </div>
+    </div>
+
+    {% for data_request in data_requests %}
+    <section class="card p-4 mb-3" aria-labelledby="employee-request-{{ data_request.pk }}">
+        <div class="list-card-header">
+            <div>
+                <h2 id="employee-request-{{ data_request.pk }}" class="h5 mb-1">{{ data_request.get_request_type_display }}</h2>
+                <span>Submitted {{ data_request.submitted_at|date:"M j, Y" }} by {{ data_request.requested_by.get_username }}{% if staff_view %} · {{ data_request.department.department_name }}{% endif %}</span>
+            </div>
+            <strong>{{ data_request.get_status_display }}</strong>
+        </div>
+        <dl class="row mb-3">
+            {% if data_request.employee %}
+            <dt class="col-sm-3">Current employee</dt>
+            <dd class="col-sm-9">{{ data_request.employee.First_name }} {{ data_request.employee.last_name }}</dd>
+            <dt class="col-sm-3">Current email</dt>
+            <dd class="col-sm-9">{{ data_request.employee.email }}</dd>
+            <dt class="col-sm-3">Current contact</dt>
+            <dd class="col-sm-9">{{ data_request.employee.contact }}</dd>
+            <dt class="col-sm-3">Current position</dt>
+            <dd class="col-sm-9">{{ data_request.employee.position.title }}</dd>
+            <dt class="col-sm-3">Current department</dt>
+            <dd class="col-sm-9">{{ data_request.employee.department_name.department_name }}</dd>
+            {% endif %}
+            {% if data_request.proposed_data.First_name %}
+            <dt class="col-sm-3">Proposed name</dt>
+            <dd class="col-sm-9">{{ data_request.proposed_data.First_name }} {{ data_request.proposed_data.last_name }}</dd>
+            {% endif %}
+            {% if data_request.proposed_data.email %}
+            <dt class="col-sm-3">Proposed email</dt>
+            <dd class="col-sm-9">{{ data_request.proposed_data.email }}</dd>
+            {% endif %}
+            {% if data_request.proposed_data.contact %}
+            <dt class="col-sm-3">Proposed contact</dt>
+            <dd class="col-sm-9">{{ data_request.proposed_data.contact }}</dd>
+            {% endif %}
+            {% if data_request.proposed_data.position %}
+            <dt class="col-sm-3">Proposed position</dt>
+            <dd class="col-sm-9">{{ data_request.proposed_position_title|default:"Position unavailable" }}</dd>
+            {% endif %}
+            {% if data_request.proposed_department_name %}
+            <dt class="col-sm-3">Proposed department</dt>
+            <dd class="col-sm-9">{{ data_request.proposed_department_name }}</dd>
+            {% endif %}
+            {% if data_request.proposed_data.hire_date %}
+            <dt class="col-sm-3">Hire date</dt>
+            <dd class="col-sm-9">{{ data_request.proposed_data.hire_date }}</dd>
+            {% endif %}
+            {% if data_request.proposed_data.age %}
+            <dt class="col-sm-3">Age</dt>
+            <dd class="col-sm-9">{{ data_request.proposed_data.age }}</dd>
+            {% endif %}
+            {% if data_request.proposed_data.gender %}
+            <dt class="col-sm-3">Gender</dt>
+            <dd class="col-sm-9">{{ data_request.proposed_data.gender }}</dd>
+            {% endif %}
+            {% if data_request.account %}
+            <dt class="col-sm-3">Login</dt>
+            <dd class="col-sm-9">{{ data_request.account.get_username }}{% if data_request.status == "pending" %} (inactive until approval){% elif data_request.status == "approved" %} (active){% else %} (not activated){% endif %}</dd>
+            {% endif %}
+        </dl>
+        {% if data_request.status == "pending" %}
+        <form method="post" action="{% url 'review_employee_data_request_page' data_request.pk %}" class="d-flex flex-column gap-2">
+            {% csrf_token %}
+            <label for="employee-review-note-{{ data_request.pk }}">Review note <span class="text-muted">(optional)</span></label>
+            <input class="form-control" id="employee-review-note-{{ data_request.pk }}" name="review_note" maxlength="500">
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-success" name="decision" value="approved" type="submit">Approve changes</button>
+                <button class="btn btn-outline-danger" name="decision" value="rejected" type="submit">Reject changes</button>
+            </div>
+        </form>
+        {% elif data_request.review_note %}
+        <p class="mb-0"><strong>Review note:</strong> {{ data_request.review_note }}</p>
+        {% endif %}
+    </section>
+    {% empty %}
+    <section class="card p-4 text-muted">No employee data requests for this department.</section>
+    {% endfor %}
+</div>
+{% endblock content %}

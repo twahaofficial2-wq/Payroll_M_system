@@ -1,0 +1,2008 @@
+ <!DOCTYPE html>
+<html>
+    {%load static%}
+    {% load crispy_forms_tags %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}NHL Payroll{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'Kaiadmin/assets/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'Kaiadmin/assets/css/plugins.min.css' %}">
+    <link rel="stylesheet" href="{% static 'Kaiadmin/assets/css/kaiadmin.min.css' %}">
+    <link rel="stylesheet" href="{% static 'Kaiadmin/assets/css/fonts.min.css' %}">
+    <script>
+        const savedTheme = localStorage.getItem('payroll-theme');
+        document.documentElement.dataset.theme = savedTheme === 'dark' ? 'dark' : 'light';
+    </script>
+    <style>
+        :root {
+            --primary: #1479c9;
+            --primary-dark: #075da8;
+            --primary-soft: #eaf5ff;
+            --text: #202b3c;
+            --muted: #6b778c;
+            --line: #e1e7f0;
+            --card: #ffffff;
+            --danger: #ba3f3f;
+            --success: #16a34a;
+            --accent: #c9832c;
+            --bg: #f4f6fb;
+            --surface: #ffffff;
+            --surface-alt: #f7f8fc;
+            --surface-hover: #f5f7fc;
+            --table-border: #edf0f6;
+            --table-heading: #637087;
+            --control-bg: #ffffff;
+            --shadow: rgba(31, 45, 75, 0.07);
+        }
+
+        html[data-theme="dark"] {
+            color-scheme: dark;
+            --primary: #75c4ff;
+            --primary-dark: #a5dcff;
+            --primary-soft: #1d3850;
+            --text: #e8edf7;
+            --muted: #a3aec2;
+            --line: #303d54;
+            --card: #192438;
+            --danger: #e57373;
+            --success: #64c995;
+            --accent: #e8ad61;
+            --bg: #111827;
+            --surface: #192438;
+            --surface-alt: #202c42;
+            --surface-hover: #27354d;
+            --table-border: #303d54;
+            --table-heading: #bdc8dc;
+            --control-bg: #151f32;
+            --shadow: rgba(0, 0, 0, 0.24);
+        }
+
+        body {
+            background: var(--bg);
+            font-family: "Public Sans", sans-serif;
+            min-height: 100vh;
+            color: var(--text);
+        }
+
+        html[data-theme="dark"] body,
+        html[data-theme="dark"] .main-panel {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        html[data-theme="dark"] .text-muted {
+            color: var(--muted) !important;
+        }
+
+        html[data-theme="dark"] .auth-form label,
+        html[data-theme="dark"] .form-card label,
+        html[data-theme="dark"] .edit-form-card label {
+            color: var(--text) !important;
+        }
+
+        html[data-theme="dark"] .table {
+            --bs-table-color: var(--text);
+            --bs-table-bg: var(--surface);
+            --bs-table-striped-color: var(--text);
+            --bs-table-striped-bg: var(--surface-alt);
+            --bs-table-hover-color: var(--text);
+            --bs-table-hover-bg: var(--surface-hover);
+        }
+
+        html[data-theme="dark"] .alert-info,
+        html[data-theme="dark"] .alert-success {
+            color: var(--text);
+            background: var(--surface-alt);
+            border-color: var(--line);
+        }
+
+        html[data-theme="dark"] .alert-danger,
+        html[data-theme="dark"] .alert-warning {
+            color: #ffe4c2;
+            background: #493728;
+            border-color: #725437;
+        }
+
+        .sidebar[data-background-color="dark"],
+        .sidebar .logo-header[data-background-color="dark"] {
+            background: linear-gradient(180deg, #0b5cab 0%, #12477f 52%, #153b68 100%) !important;
+        }
+
+        .sidebar .sidebar-content,
+        .sidebar .sidebar-wrapper {
+            background: transparent !important;
+        }
+
+        .sidebar .nav-secondary > .nav-item > .payroll-nav-link {
+            color: #d7eaff !important;
+        }
+
+        .sidebar .nav-secondary > .nav-item > .payroll-nav-link:hover,
+        .sidebar .nav-secondary > .nav-item.active > .payroll-nav-link {
+            color: #ffffff !important;
+            background: rgba(113, 190, 255, 0.2) !important;
+        }
+
+        .sidebar .nav-secondary > .nav-item.active > .payroll-nav-link {
+            box-shadow: inset 3px 0 0 #70c5ff;
+        }
+
+        .sidebar .nav-section .text-section,
+        .sidebar .employee-sidebar-caption {
+            color: rgba(222, 239, 255, 0.72) !important;
+        }
+
+        .main-panel {
+            min-width: 0;
+            background: var(--bg);
+        }
+
+        .main-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--line);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .main-panel-auth > .main-header {
+            left: 0;
+            width: 100%;
+        }
+
+        .main-header .navbar {
+            min-height: 68px;
+            padding: 10px 24px;
+        }
+
+        .main-header .navbar-brand {
+            color: var(--text);
+            font-size: 0.98rem;
+            font-weight: 700;
+        }
+
+        .main-header .nav-link {
+            color: var(--muted);
+            padding: 8px 12px;
+        }
+
+        .content-wrapper {
+            padding: 28px clamp(16px, 3vw, 42px) 40px;
+        }
+
+        .site-footer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px 24px;
+            padding: 18px clamp(16px, 3vw, 42px);
+            border-top: 1px solid var(--line);
+            background: var(--surface);
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        .site-footer p {
+            margin: 0;
+        }
+
+        .site-footer a {
+            color: var(--primary-dark);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .site-footer a:hover {
+            text-decoration: underline;
+        }
+
+        .site-footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .main-panel:not(.main-panel-auth) > .payroll-content {
+            padding-top: 96px;
+        }
+
+        .page-shell {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 16px;
+            margin-bottom: 22px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .page-header h1,
+        .page-header h2,
+        .page-header h3 {
+            color: var(--text);
+            font-weight: 700;
+            font-size: 1.65rem;
+            line-height: 1.25;
+            margin: 0;
+        }
+
+        .page-header p {
+            margin: 7px 0 0;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .card,
+        .panel,
+        .auth-card,
+        .form-card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            box-shadow: 0 5px 18px rgba(31, 45, 75, 0.045);
+        }
+
+        .form-card {
+            padding: clamp(18px, 2.4vw, 30px) !important;
+        }
+
+        .form-card form {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0 22px;
+            align-items: end;
+        }
+
+        .form-card form .mb-3,
+        .form-card form .form-group {
+            min-width: 0;
+            margin-bottom: 18px;
+        }
+
+        .form-card form label,
+        .edit-form-card form label {
+            display: inline-block;
+            margin-bottom: 7px;
+            color: var(--text);
+            font-size: 0.86rem;
+            font-weight: 600;
+        }
+
+        .form-card form button[type="submit"] {
+            grid-column: 1 / -1;
+            justify-self: start;
+            width: auto !important;
+            min-width: 170px;
+        }
+
+        .form-actions {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .table {
+            background: var(--surface);
+            border-collapse: separate;
+            border-spacing: 0;
+            overflow: hidden;
+            border-radius: 0;
+            font-size: 0.84rem;
+            width: 100%;
+            min-width: 0;
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            background: var(--surface-alt);
+            color: var(--table-heading);
+            font-size: 0.76rem;
+            letter-spacing: 0;
+            text-transform: uppercase;
+            padding: 13px 15px;
+            border-bottom: 1px solid var(--line);
+            white-space: nowrap;
+        }
+
+        .table tbody td,
+        .table tbody th {
+            padding: 13px 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--table-border);
+            color: var(--text);
+            overflow-wrap: anywhere;
+        }
+
+        .table tbody tr:last-child td,
+        .table tbody tr:last-child th {
+            border-bottom: 0;
+        }
+
+        .table tbody tr:hover > * {
+            background: var(--surface-hover);
+        }
+
+        .page-shell > .card:not(.form-card) {
+            padding: 0 !important;
+            overflow: hidden;
+        }
+
+        .page-shell > .card:not(.form-card) .table-responsive {
+            margin: 0;
+        }
+
+        .list-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .list-card-header h2 {
+            margin: 0;
+            color: var(--text);
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .list-card-header span {
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+
+        .list-filter-form {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 12px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--line);
+            background: var(--surface);
+        }
+
+        .list-filter-search {
+            flex: 1 1 260px;
+        }
+
+        .list-filter-select {
+            flex: 0 1 200px;
+        }
+
+        .list-filter-form label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .list-filter-form .form-control,
+        .list-filter-form .form-select {
+            min-height: 38px !important;
+            padding: 7px 10px !important;
+        }
+
+        .list-pagination {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 20px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 0.84rem;
+        }
+
+        .list-pagination > div {
+            display: flex;
+            gap: 8px;
+        }
+
+        .table .btn {
+            padding: 0.38rem 0.7rem;
+            font-size: 0.78rem;
+            line-height: 1.2;
+            border-radius: 6px;
+            white-space: nowrap;
+        }
+
+        .employee-table.table-sm thead th {
+            padding: 8px 10px;
+            font-size: 0.7rem;
+        }
+
+        .employee-table.table-sm tbody td,
+        .employee-table.table-sm tbody th {
+            padding: 8px 10px;
+            font-size: 0.84rem;
+        }
+
+        .employee-table .btn {
+            padding: 0.28rem 0.5rem;
+            font-size: 0.72rem;
+        }
+
+        .table td:last-child {
+            white-space: nowrap;
+        }
+
+        @media (max-width: 991px) {
+            .employee-table,
+            .employee-table tbody,
+            .employee-table tr,
+            .employee-table td,
+            .employee-table th {
+                display: block;
+                width: 100%;
+            }
+
+            .employee-table thead {
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                white-space: nowrap;
+                border: 0;
+            }
+
+            .employee-table tbody {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+                gap: 12px;
+                padding: 12px;
+            }
+
+            .employee-table tbody tr {
+                min-width: 0;
+                overflow: hidden;
+                border: 1px solid var(--line);
+                border-radius: 6px;
+                background: var(--surface);
+            }
+
+            .employee-table tbody td,
+            .employee-table tbody th {
+                display: grid;
+                grid-template-columns: minmax(88px, 30%) minmax(0, 1fr);
+                gap: 8px;
+                align-items: start;
+                padding: 9px 12px;
+                border: 0;
+                border-bottom: 1px solid var(--table-border);
+                white-space: normal;
+                overflow-wrap: anywhere;
+            }
+
+            .employee-table tbody td::before,
+            .employee-table tbody th::before {
+                content: attr(data-label);
+                color: var(--muted);
+                font-weight: 600;
+            }
+
+            .employee-table tbody tr td[colspan] {
+                display: block;
+            }
+
+            .employee-table tbody tr td[colspan]::before {
+                content: none;
+            }
+
+            .employee-table td:last-child {
+                white-space: normal;
+            }
+
+            .employee-table td[data-label="Actions"] {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .employee-table td[data-label="Actions"]::before {
+                flex-basis: 100%;
+            }
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 600;
+            transition:
+                background-color 0.16s ease,
+                border-color 0.16s ease,
+                color 0.16s ease,
+                box-shadow 0.16s ease,
+                transform 0.16s ease;
+        }
+
+        .btn:not(:disabled):hover {
+            transform: translateY(-1px);
+        }
+
+        .btn:focus-visible,
+        .content-wrapper a:focus-visible,
+        .sidebar a:focus-visible {
+            outline: 3px solid rgba(69, 103, 217, 0.45);
+            outline-offset: 3px;
+        }
+
+        .content-wrapper a:not(.btn) {
+            transition: color 0.16s ease;
+        }
+
+        .employee-stat-card,
+        .employee-dashboard-card {
+            transition:
+                border-color 0.18s ease,
+                box-shadow 0.18s ease,
+                transform 0.18s ease;
+        }
+
+        .employee-stat-card:hover,
+        .employee-dashboard-card:hover {
+            border-color: rgba(69, 103, 217, 0.28);
+            box-shadow: 0 10px 24px rgba(31, 45, 75, 0.09);
+            transform: translateY(-2px);
+        }
+
+        .btn.is-loading {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: wait;
+            opacity: 0.82;
+            pointer-events: none;
+        }
+
+        .btn.is-loading::before,
+        .download-is-loading::before {
+            width: 0.9em;
+            height: 0.9em;
+            flex: 0 0 0.9em;
+            border: 2px solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            content: "";
+            animation: payroll-spin 0.7s linear infinite;
+        }
+
+        .download-is-loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            pointer-events: none;
+        }
+
+        @keyframes payroll-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .btn-primary {
+            color: #ffffff !important;
+            background: var(--primary) !important;
+            border: 1px solid var(--primary) !important;
+            padding: 0.68rem 1rem;
+            box-shadow: 0 3px 8px rgba(69, 103, 217, 0.16);
+        }
+
+        .btn-primary:hover {
+            color: #ffffff !important;
+            background: var(--primary-dark) !important;
+            border-color: var(--primary-dark) !important;
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-dark) !important;
+            border-color: var(--primary) !important;
+        }
+
+        .btn-outline-primary:hover {
+            color: #ffffff !important;
+            background: var(--primary) !important;
+            border-color: var(--primary) !important;
+        }
+
+        .content-wrapper a:not(.btn) {
+            color: var(--primary-dark);
+        }
+
+        .content-wrapper a:not(.btn):hover {
+            color: var(--primary);
+        }
+
+        .btn-success {
+            background: var(--primary);
+            border: none;
+            padding: 0.68rem 1rem;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            border: none;
+        }
+
+        .btn-outline-secondary {
+            color: var(--text);
+            border-color: var(--line);
+        }
+
+        .btn-outline-secondary:hover {
+            color: var(--primary-dark);
+            border-color: var(--primary);
+            background: var(--primary-soft);
+        }
+
+        .form-control,
+        .form-select,
+        select,
+        input {
+            border: 1px solid var(--line) !important;
+            border-radius: 5px !important;
+            padding: 10px 12px !important;
+            min-height: 42px !important;
+            box-shadow: none !important;
+            background: var(--control-bg);
+            color: var(--text);
+        }
+
+        .form-control::placeholder,
+        input::placeholder,
+        textarea::placeholder {
+            color: var(--muted);
+            opacity: 0.8;
+        }
+
+        .form-control:focus,
+        .form-select:focus,
+        select:focus,
+        input:focus {
+            border-color: rgba(69, 103, 217, 0.65) !important;
+            box-shadow: 0 0 0 3px rgba(69, 103, 217, 0.12) !important;
+        }
+
+        textarea.form-control {
+            min-height: 110px !important;
+        }
+
+        .auth-shell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 120px);
+            padding: 24px 16px;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 440px;
+            padding: 32px;
+            background: var(--surface);
+        }
+
+        .brand-pill {
+            display: inline-block;
+            background: var(--primary-soft);
+            color: var(--primary);
+            font-size: 0.72rem;
+            padding: 8px 12px;
+            border-radius: 999px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+        }
+
+        .auth-card h2 {
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+
+        .auth-card p {
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        .auth-form .form-group {
+            margin-bottom: 18px;
+        }
+
+        .auth-card-signup {
+            max-width: 500px;
+            padding: clamp(24px, 4vw, 36px);
+        }
+
+        .auth-form-signup .form-group {
+            margin-bottom: 16px;
+            padding: 0 !important;
+        }
+
+        .auth-form-signup .form-text {
+            margin-top: 6px;
+            padding: 9px 12px;
+            border-radius: 5px;
+            background: var(--surface-alt);
+            color: var(--muted);
+            font-size: 0.78rem;
+            line-height: 1.45;
+        }
+
+        .auth-form-signup .form-text ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .auth-form-signup .form-text li + li {
+            margin-top: 3px;
+        }
+
+        .auth-form label {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .auth-form .btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 0.8rem 1rem;
+        }
+
+        .auth-links {
+            margin-top: 18px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
+        .payroll-brand {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            color: #fff !important;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            line-height: 1.2;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+
+        .logo-header {
+            box-sizing: border-box;
+            width: 265px;
+        }
+
+        .logo-header .nav-toggle {
+            right: 12px;
+        }
+
+        html[data-theme="dark"] .payroll-brand {
+            color: #fff !important;
+        }
+
+        .payroll-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .payroll-nav-link i {
+            width: 18px;
+            text-align: center;
+        }
+
+        .employee-sidebar .sidebar-logo,
+        .employee-sidebar .logo-header {
+            min-height: 68px;
+        }
+
+        .employee-sidebar .nav-section .text-section {
+            color: rgba(222, 239, 255, 0.72);
+            font-size: 0.68rem;
+            letter-spacing: 0.11em;
+            text-transform: uppercase;
+        }
+
+        .employee-sidebar .nav-item.active > .payroll-nav-link {
+            background: rgba(113, 190, 255, 0.2);
+            color: #ffffff;
+        }
+
+        .employee-sidebar .payroll-nav-link {
+            min-height: 44px;
+            border-radius: 8px;
+        }
+
+        .employee-sidebar .payroll-nav-link p {
+            margin: 0;
+        }
+
+        .employee-sidebar .employee-sidebar-caption {
+            padding: 18px 22px 4px;
+            color: rgba(222, 239, 255, 0.72);
+            font-size: 0.72rem;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+        }
+
+        .main-panel-auth {
+            width: 100%;
+            margin-left: 0 !important;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .payroll-content {
+            min-height: calc(100vh - 130px);
+        }
+
+        .main-panel-auth .payroll-content {
+            display: flex;
+            flex: 1 0 auto;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-panel-auth .auth-shell {
+            width: 100%;
+            min-height: 0;
+        }
+
+        .page-title {
+            color: var(--text);
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .card-stats .card-body {
+            padding: 20px;
+        }
+
+        .card-category {
+            color: var(--muted);
+            font-size: 0.84rem;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            color: var(--text);
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .current-payroll-card {
+            padding: 22px 24px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .current-payroll-layout,
+        .current-payroll-empty-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(170px, 0.32fr);
+            align-items: center;
+            gap: 24px;
+        }
+
+        .current-payroll-summary {
+            min-width: 0;
+        }
+
+        .current-payroll-image {
+            display: block;
+            width: 100%;
+            max-height: 170px;
+            aspect-ratio: 16 / 10;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+
+        .current-payroll-heading {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .current-payroll-period {
+            margin: 0;
+            color: var(--text);
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .current-payroll-totals {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .current-payroll-totals > div {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            min-width: 0;
+        }
+
+        .current-payroll-totals span,
+        .current-payroll-note,
+        .current-payroll-empty p {
+            color: var(--muted);
+            font-size: 0.84rem;
+        }
+
+        .current-payroll-totals strong {
+            color: var(--text);
+            font-size: 1.18rem;
+            overflow-wrap: anywhere;
+        }
+
+        .current-payroll-note {
+            margin-top: 18px;
+        }
+
+        .current-payroll-empty {
+            padding: 24px;
+        }
+
+        .current-payroll-empty-layout {
+            grid-template-columns: minmax(0, 1fr) 150px;
+        }
+
+        .current-payroll-empty-layout img {
+            display: block;
+            width: 100%;
+            max-height: 130px;
+            object-fit: contain;
+        }
+
+        .badge-info {
+            background: var(--primary-soft);
+            color: var(--primary-dark);
+        }
+
+        .badge-success {
+            background: #e8f5ee;
+            color: #27734c;
+        }
+
+        .badge-warning {
+            background: #fff0d6;
+            color: #75500b;
+        }
+
+        .badge-secondary {
+            background: var(--surface-alt);
+            color: var(--muted);
+        }
+
+        html[data-theme="dark"] .badge-success {
+            background: #203b34;
+            color: #a1e2be;
+        }
+
+        html[data-theme="dark"] .badge-warning {
+            background: #493d27;
+            color: #f0d195;
+        }
+
+        .btn-success {
+            color: #fff;
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .btn-success:hover,
+        .btn-success:focus {
+            color: #fff;
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+
+        .auth-card {
+            border-top: 3px solid var(--primary);
+            box-shadow: 0 18px 48px rgba(31, 45, 75, 0.1);
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+            align-items: center;
+            gap: clamp(24px, 5vw, 72px);
+            max-width: 1180px;
+            min-height: 560px;
+            margin: 0 auto;
+            padding: clamp(28px, 6vw, 72px);
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: linear-gradient(120deg, var(--surface) 0%, var(--surface) 65%, var(--primary-soft) 65%, var(--primary-soft) 100%);
+            box-shadow: 0 8px 24px var(--shadow);
+        }
+
+        .hero-text h1 {
+            max-width: 560px;
+            margin: 0 0 14px;
+            color: var(--text);
+            font-size: clamp(2.2rem, 5vw, 3.8rem);
+            font-weight: 700;
+            line-height: 1.05;
+        }
+
+        .hero-text h3 {
+            margin: 0 0 14px;
+            color: var(--primary);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .hero-text p {
+            max-width: 520px;
+            color: var(--muted);
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .hero-image img {
+            display: block;
+            width: 100%;
+            max-height: 360px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+
+        .welcome-panel {
+            max-width: 1040px;
+            margin: 0 auto;
+            padding: clamp(24px, 4vw, 44px);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--surface);
+            box-shadow: 0 6px 20px var(--shadow);
+        }
+
+        .welcome-panel h1 {
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .welcome-panel p {
+            max-width: 760px;
+            color: var(--muted);
+            line-height: 1.75;
+        }
+
+        .welcome-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 22px;
+        }
+
+        .employee-welcome-panel {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 20px;
+            padding: 26px 30px;
+            border: 1px solid #277fbd;
+            border-radius: 14px;
+            background: linear-gradient(115deg, #075da8 0%, #1479c9 55%, #1599c5 100%);
+            box-shadow: 0 12px 28px rgba(7, 93, 168, 0.18);
+        }
+
+        .employee-welcome-panel::before {
+            position: absolute;
+            z-index: -1;
+            top: -105%;
+            left: -18%;
+            width: 72%;
+            height: 310%;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 44%;
+            background:
+                radial-gradient(ellipse at 38% 38%, rgba(255, 255, 255, 0.2), transparent 34%),
+                radial-gradient(ellipse at 68% 58%, rgba(86, 211, 255, 0.22), transparent 42%);
+            content: "";
+            pointer-events: none;
+            animation: employee-water-flow 16s ease-in-out infinite alternate;
+        }
+
+        @keyframes employee-water-flow {
+            from {
+                transform: translate3d(-3%, -2%, 0) rotate(-12deg) scale(1);
+            }
+
+            to {
+                transform: translate3d(58%, 3%, 0) rotate(13deg) scale(1.08);
+            }
+        }
+
+        .employee-welcome-panel > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .employee-eyebrow {
+            display: inline-block;
+            margin-bottom: 8px;
+            color: #bdeaff;
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+        }
+
+        .employee-welcome-panel h2 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 1.3rem;
+            font-weight: 750;
+        }
+
+        .employee-welcome-panel p {
+            margin: 5px 0 0;
+            color: #d7efff;
+        }
+
+        .employee-welcome-link {
+            flex-shrink: 0;
+            color: #ffffff;
+            font-size: 0.88rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .employee-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .employee-stat-card {
+            display: grid;
+            grid-template-columns: 44px minmax(0, 1fr);
+            align-items: center;
+            column-gap: 13px;
+            min-height: 132px;
+            padding: 19px;
+            border: 1px solid var(--line);
+            border-radius: 11px;
+            background: var(--surface);
+            box-shadow: 0 4px 14px var(--shadow);
+        }
+
+        .employee-stat-icon,
+        .employee-empty-icon,
+        .employee-activity-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 42px;
+            height: 42px;
+            border-radius: 11px;
+            background: var(--primary-soft);
+            color: var(--primary-dark);
+        }
+
+        .employee-stat-icon-warm {
+            background: #fff3e5;
+            color: #a46113;
+        }
+
+        .employee-stat-card > div {
+            display: flex;
+            min-width: 0;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .employee-stat-label,
+        .employee-stat-note {
+            color: var(--muted);
+            font-size: 0.77rem;
+        }
+
+        .employee-stat-card strong {
+            color: var(--text);
+            font-size: 1.4rem;
+            line-height: 1.25;
+            overflow-wrap: anywhere;
+        }
+
+        .employee-stat-card a,
+        .employee-stat-note {
+            grid-column: 2;
+            margin-top: 8px;
+        }
+
+        .employee-stat-card a {
+            color: var(--primary-dark);
+            font-size: 0.79rem;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .employee-dashboard-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.85fr);
+            align-items: start;
+            gap: 18px;
+        }
+
+        .employee-dashboard-card {
+            min-width: 0;
+            border-radius: 11px;
+        }
+
+        .employee-dashboard-card .list-card-header > div {
+            display: grid;
+            gap: 4px;
+        }
+
+        .employee-latest-payslip {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px 18px;
+            padding: 24px;
+        }
+
+        .employee-latest-payslip > div {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .employee-latest-payslip strong {
+            color: var(--text);
+            font-size: 1.03rem;
+        }
+
+        .employee-latest-payslip .employee-net-pay {
+            color: var(--primary-dark);
+            font-size: 1.35rem;
+        }
+
+        .employee-latest-payslip .btn {
+            justify-self: start;
+            grid-column: 1 / -1;
+        }
+
+        .employee-activity-list {
+            padding: 4px 20px;
+        }
+
+        .employee-activity-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 0;
+            border-bottom: 1px solid var(--table-border);
+        }
+
+        .employee-activity-item:last-child {
+            border-bottom: 0;
+        }
+
+        .employee-activity-icon {
+            width: 36px;
+            height: 36px;
+            flex: 0 0 36px;
+            border-radius: 50%;
+            font-size: 0.85rem;
+        }
+
+        .employee-activity-copy {
+            display: flex;
+            min-width: 0;
+            flex: 1;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .employee-activity-copy strong {
+            color: var(--text);
+            font-size: 0.88rem;
+        }
+
+        .employee-activity-copy span {
+            color: var(--muted);
+            font-size: 0.77rem;
+        }
+
+        .employee-status {
+            padding: 5px 9px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .employee-status-pending {
+            background: #fff3e5;
+            color: #89520f;
+        }
+
+        .employee-status-approved {
+            background: #e8f5ee;
+            color: #27734c;
+        }
+
+        .employee-status-rejected {
+            background: #fcebea;
+            color: #a33232;
+        }
+
+        .employee-empty-state {
+            display: flex;
+            min-height: 220px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+            text-align: center;
+        }
+
+        .employee-empty-state-compact {
+            min-height: 245px;
+        }
+
+        .employee-empty-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 12px;
+            border-radius: 50%;
+            font-size: 1.05rem;
+        }
+
+        .employee-empty-state h3,
+        .employee-unlinked-card h2 {
+            margin: 0 0 6px;
+            color: var(--text);
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .employee-empty-state p,
+        .employee-unlinked-card p {
+            max-width: 480px;
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.86rem;
+        }
+
+        .employee-empty-state a {
+            margin-top: 12px;
+            color: var(--primary-dark);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .employee-unlinked-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            padding: 26px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .employee-unlinked-card .employee-empty-icon {
+            flex: 0 0 48px;
+            background: #fff3e5;
+            color: #a46113;
+        }
+
+        .employee-unlinked-card p + p {
+            margin-top: 10px;
+        }
+
+        html[data-theme="dark"] .employee-welcome-panel {
+            border-color: #3a83b4;
+            background: linear-gradient(115deg, #103f68 0%, #145c91 55%, #126d86 100%);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24);
+        }
+
+        html[data-theme="dark"] .sidebar[data-background-color="dark"],
+        html[data-theme="dark"] .sidebar .logo-header[data-background-color="dark"] {
+            background: linear-gradient(180deg, #0a3b68 0%, #0c3156 52%, #102b49 100%) !important;
+        }
+
+        html[data-theme="dark"] .employee-stat-icon-warm,
+        html[data-theme="dark"] .employee-status-pending,
+        html[data-theme="dark"] .employee-unlinked-card .employee-empty-icon {
+            background: #493728;
+            color: #ffd39a;
+        }
+
+        html[data-theme="dark"] .employee-status-approved {
+            background: #203b34;
+            color: #a1e2be;
+        }
+
+        html[data-theme="dark"] .employee-status-rejected {
+            background: #4a2d2d;
+            color: #ffb4b4;
+        }
+
+        @media (max-width: 991.5px) {
+            .main-header {
+                left: 0 !important;
+                width: 100% !important;
+            }
+
+            .main-header .navbar-header {
+                position: relative !important;
+                width: 100%;
+                transform: none !important;
+                transition: none !important;
+            }
+
+            .main-panel {
+                float: none !important;
+                width: 100% !important;
+                max-width: 100%;
+                margin-left: 0 !important;
+            }
+
+            .sidebar {
+                position: fixed !important;
+                top: 0;
+                left: 0;
+                z-index: 1102;
+                width: 250px !important;
+                height: 100vh;
+                transform: translateX(-100%) !important;
+                transition: transform 0.2s ease !important;
+            }
+
+            body.mobile-nav-open .sidebar {
+                transform: translateX(0) !important;
+            }
+
+            .mobile-menu-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 40px;
+                min-height: 40px;
+                margin-right: 8px;
+                color: var(--text);
+            }
+
+            body.mobile-nav-open .mobile-nav-overlay {
+                position: fixed;
+                inset: 0;
+                z-index: 1101;
+                display: block;
+                width: 100%;
+                height: 100%;
+                border: 0;
+                background: rgba(15, 23, 20, 0.48);
+            }
+
+            .main-header .navbar .container-fluid {
+                flex-wrap: nowrap;
+                padding: 0;
+            }
+        }
+
+        @media (max-width: 767px) {
+            body,
+            .wrapper {
+                width: 100%;
+                overflow-x: hidden;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                z-index: 1102;
+                width: 250px;
+                height: 100vh;
+                transform: translateX(-100%);
+                transition: transform 0.2s ease;
+            }
+
+            .sidebar .sidebar-logo {
+                display: block !important;
+            }
+
+            .sidebar .logo-header {
+                width: 250px;
+                padding-left: 18px;
+                padding-right: 42px;
+            }
+
+            .sidebar .payroll-brand {
+                font-size: 0.94rem;
+            }
+
+            body.mobile-nav-open .sidebar {
+                transform: translateX(0);
+            }
+
+            .main-panel {
+                float: none !important;
+                width: 100% !important;
+                max-width: 100%;
+                margin-left: 0 !important;
+            }
+
+            .main-header,
+            .main-panel-auth > .main-header {
+                left: 0 !important;
+                width: 100% !important;
+            }
+
+            .main-panel:not(.main-panel-auth) > .payroll-content {
+                padding-top: 96px;
+            }
+
+            .mobile-menu-toggle {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 40px;
+                min-height: 40px;
+                margin-right: 8px;
+                color: var(--text);
+            }
+
+            .main-header .navbar .container-fluid {
+                flex-wrap: nowrap;
+                padding: 0;
+            }
+
+            .main-header .navbar-brand {
+                font-size: 0.86rem;
+                white-space: nowrap;
+            }
+
+            .content-wrapper {
+                padding: 20px 14px 32px;
+            }
+
+            .main-header .navbar {
+                padding: 8px 14px;
+            }
+
+            .page-header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .page-header h1,
+            .page-title {
+                font-size: 1.45rem;
+            }
+
+            .current-payroll-totals {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .current-payroll-layout,
+            .current-payroll-empty-layout {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 16px;
+            }
+
+            .current-payroll-image {
+                max-height: 190px;
+            }
+
+            .current-payroll-empty-layout img {
+                width: min(100%, 150px);
+                justify-self: center;
+            }
+
+            .list-filter-form > * {
+                flex: 1 1 100%;
+            }
+
+            .form-card form {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            .form-card form button[type="submit"],
+            .form-actions {
+                grid-column: 1;
+            }
+
+            .auth-card {
+                padding: 26px 22px;
+            }
+
+            .hero {
+                grid-template-columns: 1fr;
+                min-height: 0;
+                padding: 28px 22px;
+                background: #fff;
+            }
+
+            .hero-image img {
+                max-height: 260px;
+            }
+
+            .employee-stat-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .employee-stat-card {
+                grid-template-columns: 36px minmax(0, 1fr);
+                min-height: 122px;
+                gap: 10px;
+                padding: 14px 12px;
+            }
+
+            .employee-stat-icon {
+                width: 36px;
+                height: 36px;
+            }
+
+            .employee-stat-card strong {
+                font-size: 1.14rem;
+            }
+
+            .employee-dashboard-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .employee-welcome-panel {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 21px;
+            }
+
+            .employee-latest-payslip {
+                padding: 18px;
+            }
+
+            .employee-unlinked-card {
+                padding: 20px;
+            }
+
+            .table-responsive {
+                width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            .btn:not(:disabled):hover,
+            .employee-stat-card:hover,
+            .employee-dashboard-card:hover {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        {% if user.is_authenticated %}
+        <aside class="sidebar{% if not user.is_staff %} employee-sidebar{% endif %}" data-background-color="dark">
+            <div class="sidebar-logo">
+                <div class="logo-header" data-background-color="dark">
+                    <a class="logo payroll-brand" href="{% if user.is_staff %}{% url 'dashboard_page' %}{% else %}{% url 'home_page' %}{% endif %}">NHL PAYROLL</a>
+                    <div class="nav-toggle">
+                        <button class="btn btn-toggle toggle-sidebar" type="button" aria-label="Toggle sidebar">
+                            <i class="gg-menu-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="sidebar-wrapper scrollbar scrollbar-inner">
+                <div class="sidebar-content">
+                    {% if user.is_staff %}
+                    <ul class="nav nav-secondary">
+                        <li class="nav-item {% if request.resolver_match.url_name == 'dashboard_page' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'dashboard_page' %}"><i class="fas fa-chart-line"></i><p>Overview</p></a>
+                        </li>
+                        <li class="nav-section"><span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span><h4 class="text-section">People</h4></li>
+                        <li class="nav-item {% if 'employee' in request.path %}active{% endif %}"><a class="payroll-nav-link" href="{% url 'add_employee_page' %}"><i class="fas fa-users"></i><p>Employees</p></a></li>
+                        <li class="nav-item {% if 'department' in request.path %}active{% endif %}"><a class="payroll-nav-link" href="{% url 'add_department_page' %}"><i class="fas fa-building"></i><p>Departments</p></a></li>
+                        <li class="nav-item {% if 'position' in request.path %}active{% endif %}"><a class="payroll-nav-link" href="{% url 'add_position_page' %}"><i class="fas fa-briefcase"></i><p>Positions</p></a></li>
+                        <li class="nav-item {% if 'salary_scale' in request.path %}active{% endif %}"><a class="payroll-nav-link" href="{% url 'add_salary_scale_page' %}"><i class="fas fa-coins"></i><p>Salary scales</p></a></li>
+                        <li class="nav-section"><span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span><h4 class="text-section">Payroll</h4></li>
+                        <li class="nav-item {% if 'payroll' in request.path %}active{% endif %}"><a class="payroll-nav-link" href="{% url 'add_payroll_page' %}"><i class="fas fa-file-invoice-dollar"></i><p>Payroll runs</p></a></li>
+                        <li class="nav-item {% if 'payslip' in request.path %}active{% endif %}"><a class="payroll-nav-link" href="{% url 'add_payslip_page' %}"><i class="fas fa-receipt"></i><p>Payslips</p></a></li>
+                        <li class="nav-item {% if 'staff/leave-requests' in request.path %}active{% endif %}"><a class="payroll-nav-link" href="{% url 'staff_leave_requests_page' %}"><i class="fas fa-calendar-check"></i><p>Leave requests</p></a></li>
+                        <li class="nav-item {% if 'staff/payroll-requests' in request.path %}active{% endif %}"><a class="payroll-nav-link" href="{% url 'staff_payroll_requests_page' %}"><i class="fas fa-clipboard-check"></i><p>Correction queue</p></a></li>
+                        <li class="nav-item {% if 'staff/employee-data-requests' in request.path %}active{% endif %}"><a class="payroll-nav-link" href="{% url 'staff_employee_data_requests_page' %}"><i class="fas fa-user-check"></i><p>Employee approvals</p></a></li>
+                        <li class="nav-item {% if request.resolver_match.url_name == 'home_page' %}active{% endif %}"><a class="payroll-nav-link" href="{% url 'home_page' %}"><i class="fas fa-house"></i><p>Home</p></a></li>
+                    </ul>
+                    {% elif user.managed_department %}
+                    <div class="employee-sidebar-caption">DEPARTMENT MANAGEMENT</div>
+                    <ul class="nav nav-secondary">
+                        <li class="nav-item {% if request.resolver_match.url_name == 'home_page' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'home_page' %}"><i class="fas fa-house"></i><p>My overview</p></a>
+                        </li>
+                        <li class="nav-item {% if request.resolver_match.url_name == 'manager_employees_page' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'manager_employees_page' %}"><i class="fas fa-users"></i><p>Department employees</p></a>
+                        </li>
+                        <li class="nav-item {% if request.resolver_match.url_name == 'manager_leave_requests_page' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'manager_leave_requests_page' %}"><i class="fas fa-calendar-check"></i><p>Leave approvals</p></a>
+                        </li>
+                        <li class="nav-item {% if request.resolver_match.url_name == 'manager_payroll_requests_page' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'manager_payroll_requests_page' %}"><i class="fas fa-file-circle-question"></i><p>Payroll requests</p></a>
+                        </li>
+                        <li class="nav-item {% if request.resolver_match.url_name == 'manager_employee_data_requests_page' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'manager_employee_data_requests_page' %}"><i class="fas fa-user-check"></i><p>Employee approvals</p></a>
+                        </li>
+                        <li class="nav-section"><span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span><h4 class="text-section">My account</h4></li>
+                        <li class="nav-item {% if request.resolver_match.url_name == 'employee_payslips_page' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'employee_payslips_page' %}"><i class="fas fa-receipt"></i><p>My payslips</p></a>
+                        </li>
+                        <li class="nav-item {% if request.resolver_match.url_name == 'employee_payroll_requests_page' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'employee_payroll_requests_page' %}"><i class="fas fa-circle-question"></i><p>My payroll requests</p></a>
+                        </li>
+                        <li class="nav-item {% if request.resolver_match.url_name == 'leave_request_page' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'leave_request_page' %}"><i class="fas fa-calendar-plus"></i><p>My leave</p></a>
+                        </li>
+                        <li class="nav-item {% if request.resolver_match.url_name == 'employee_profile_page' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'employee_profile_page' %}"><i class="fas fa-user"></i><p>My profile</p></a>
+                        </li>
+                        <li class="nav-item {% if request.resolver_match.url_name == 'password_change' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'password_change' %}"><i class="fas fa-lock"></i><p>Change password</p></a>
+                        </li>
+                    </ul>
+                    {% else %}
+                    <div class="employee-sidebar-caption">EMPLOYEE SELF-SERVICE</div>
+                    <ul class="nav nav-secondary">
+                        <li class="nav-item {% if request.resolver_match.url_name == 'home_page' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'home_page' %}"><i class="fas fa-house"></i><p>Overview</p></a>
+                        </li>
+                        <li class="nav-section"><span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span><h4 class="text-section">My payroll</h4></li>
+                        <li class="nav-item {% if request.resolver_match.url_name == 'employee_payslips_page' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'employee_payslips_page' %}"><i class="fas fa-receipt"></i><p>My payslips</p></a>
+                        </li>
+                        <li class="nav-item {% if request.resolver_match.url_name == 'employee_payroll_requests_page' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'employee_payroll_requests_page' %}"><i class="fas fa-circle-question"></i><p>Payroll requests</p></a>
+                        </li>
+                        <li class="nav-section"><span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span><h4 class="text-section">Time off</h4></li>
+                        <li class="nav-item {% if request.resolver_match.url_name == 'leave_request_page' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'leave_request_page' %}"><i class="fas fa-calendar-check"></i><p>Leave requests</p></a>
+                        </li>
+                        <li class="nav-section"><span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span><h4 class="text-section">Account</h4></li>
+                        <li class="nav-item {% if request.resolver_match.url_name == 'employee_profile_page' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'employee_profile_page' %}"><i class="fas fa-user"></i><p>My profile</p></a>
+                        </li>
+                        <li class="nav-item {% if request.resolver_match.url_name == 'password_change' %}active{% endif %}">
+                            <a class="payroll-nav-link" href="{% url 'password_change' %}"><i class="fas fa-lock"></i><p>Change password</p></a>
+                        </li>
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+        </aside>
+        {% endif %}
+        {% if user.is_authenticated %}
+        <button class="mobile-nav-overlay" type="button" tabindex="-1" aria-label="Close navigation"></button>
+        {% endif %}
+
+        <div class="main-panel{% if not user.is_authenticated %} main-panel-auth{% endif %}">
+            <div class="main-header">
+                <nav class="navbar navbar-header navbar-header-transparent navbar-expand-lg border-bottom">
+                    <div class="container-fluid">
+                        {% if user.is_authenticated %}
+                        <button class="btn btn-link mobile-menu-toggle" type="button" aria-label="Open navigation" aria-expanded="false">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        {% endif %}
+                        <span class="navbar-brand mb-0 h1">{% if user.is_staff %}Payroll Management{% elif user.managed_department %}Department manager{% elif user.is_authenticated %}Employee self-service{% else %}Payroll Management{% endif %}</span>
+                        <ul class="navbar-nav topbar-nav ms-md-auto align-items-center">
+                            <li class="nav-item">
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-outline-secondary theme-toggle"
+                                    id="theme-toggle"
+                                    aria-label="Switch to dark mode"
+                                    aria-pressed="false"
+                                >
+                                    <i class="fas fa-moon" id="theme-toggle-icon" aria-hidden="true"></i>
+                                    <span id="theme-toggle-label">Dark mode</span>
+                                </button>
+                            </li>
+                            {% if user.is_authenticated %}
+                            <li class="nav-item"><span class="nav-link">Hi, {{ user.get_username }}</span></li>
+                            <li class="nav-item">
+                                <form method="post" action="{% url 'logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Log out</button>
+                                </form>
+                            </li>
+                            {% else %}
+                            <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Log in</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{% url 'sign_up_page' %}">Sign up</a></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+            <main class="content-wrapper payroll-content">
+                {% if messages %}
+                <div class="page-shell">
+                    {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }}" role="alert">{{ message }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% block content %}{% endblock content %}
+            </main>
+            <footer class="site-footer">
+                <p>&copy; {% now "Y" %} NHL Payroll. All rights reserved.</p>
+                <nav class="site-footer-links" aria-label="Footer navigation">
+                    {% if user.is_staff %}
+                    <a href="{% url 'dashboard_page' %}">Dashboard</a>
+                    {% else %}
+                    <a href="{% url 'index_page' %}">Home</a>
+                    {% endif %}
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'login' %}">Log in</a>
+                    <a href="{% url 'sign_up_page' %}">Sign up</a>
+                    {% endif %}
+                </nav>
+            </footer>
+        </div>
+    </div>
+    <script src="{% static 'Kaiadmin/assets/js/core/jquery-3.7.1.min.js' %}"></script>
+    <script src="{% static 'Kaiadmin/assets/js/core/popper.min.js' %}"></script>
+    <script src="{% static 'Kaiadmin/assets/js/core/bootstrap.min.js' %}"></script>
+    <script src="{% static 'Kaiadmin/assets/js/plugin/jquery-scrollbar/jquery.scrollbar.min.js' %}"></script>
+    <script src="{% static 'Kaiadmin/assets/js/kaiadmin.min.js' %}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const themeToggle = document.getElementById('theme-toggle');
+            const themeIcon = document.getElementById('theme-toggle-icon');
+            const themeLabel = document.getElementById('theme-toggle-label');
+
+            function updateThemeToggle(theme) {
+                const isDark = theme === 'dark';
+                themeToggle.setAttribute('aria-pressed', String(isDark));
+                themeToggle.setAttribute(
+                    'aria-label',
+                    isDark ? 'Switch to light mode' : 'Switch to dark mode'
+                );
+                themeLabel.textContent = isDark ? 'Light mode' : 'Dark mode';
+                themeIcon.classList.toggle('fa-sun', isDark);
+                themeIcon.classList.toggle('fa-moon', !isDark);
+            }
+
+            updateThemeToggle(document.documentElement.dataset.theme);
+            themeToggle.addEventListener('click', function () {
+                const nextTheme =
+                    document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+                document.documentElement.dataset.theme = nextTheme;
+                localStorage.setItem('payroll-theme', nextTheme);
+                updateThemeToggle(nextTheme);
+            });
+
+            const menuToggle = document.querySelector('.mobile-menu-toggle');
+            if (menuToggle) {
+                const navOverlay = document.querySelector('.mobile-nav-overlay');
+
+                function closeMobileNavigation() {
+                    document.body.classList.remove('mobile-nav-open');
+                    menuToggle.setAttribute('aria-expanded', 'false');
+                }
+
+                menuToggle.addEventListener('click', function () {
+                    const isOpen = document.body.classList.toggle('mobile-nav-open');
+                    menuToggle.setAttribute('aria-expanded', String(isOpen));
+                });
+
+                if (navOverlay) {
+                    navOverlay.addEventListener('click', closeMobileNavigation);
+                }
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape') closeMobileNavigation();
+                });
+
+                document.querySelectorAll('.sidebar a').forEach(function (link) {
+                    link.addEventListener('click', closeMobileNavigation);
+                });
+            }
+
+            document.querySelectorAll('form[method="post" i]').forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (event.defaultPrevented || form.dataset.submitting === 'true') {
+                        if (form.dataset.submitting === 'true') event.preventDefault();
+                        return;
+                    }
+
+                    const submitter = event.submitter || form.querySelector(
+                        'button[type="submit"], input[type="submit"]'
+                    );
+                    form.dataset.submitting = 'true';
+                    form.setAttribute('aria-busy', 'true');
+
+                    if (!submitter) return;
+
+                    if (submitter.name) {
+                        const submittedValue = document.createElement('input');
+                        submittedValue.type = 'hidden';
+                        submittedValue.name = submitter.name;
+                        submittedValue.value = submitter.value;
+                        submittedValue.dataset.loadingSubmitter = 'true';
+                        form.appendChild(submittedValue);
+                    }
+
+                    submitter.innerHTML = submitter.dataset.loadingText || 'Submitting...';
+                    submitter.classList.add('is-loading');
+                    submitter.setAttribute('aria-busy', 'true');
+                    submitter.disabled = true;
+                });
+            });
+
+            document.querySelectorAll('[data-payslip-download]').forEach(function (link) {
+                link.addEventListener('click', function () {
+                    if (link.classList.contains('download-is-loading')) return;
+
+                    const originalContent = link.innerHTML;
+                    link.classList.add('download-is-loading');
+                    link.setAttribute('aria-busy', 'true');
+                    link.textContent = 'Preparing PDF...';
+
+                    window.setTimeout(function () {
+                        link.innerHTML = originalContent;
+                        link.classList.remove('download-is-loading');
+                        link.removeAttribute('aria-busy');
+                    }, 4000);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
