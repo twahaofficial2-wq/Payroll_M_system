@@ -1,5 +1,11 @@
 # Employee Payroll
 
+## Group members
+
+- MAGALA TWAHA
+- GUMA RODNEY
+- KISUUBIKA SHAFIK
+
 ## Requirements
 
 - Python 3.12 or newer
